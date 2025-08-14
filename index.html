@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoGo - Energy Monitoring App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-leaf"></i>
+                    <h1>EcoGo</h1>
+                </div>
+                <p class="tagline">Monitor your energy usage, save the planet</p>
+            </div>
+            <div class="user-menu">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="userName">User</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Overview -->
+            <section class="dashboard">
+                <h2><i class="fas fa-chart-line"></i> Energy Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Today's Usage</h3>
+                            <p class="stat-value" id="todayUsage">0 kWh</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Cost Today</h3>
+                            <p class="stat-value" id="todayCost">₹0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Active Alerts</h3>
+                            <p class="stat-value" id="activeAlerts">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-target"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Daily Goal</h3>
+                            <p class="stat-value" id="goalProgress">0%</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Historical Data -->
+            <section class="historical-data">
+                <h2><i class="fas fa-chart-area"></i> Historical Data</h2>
+                
+                <!-- Time Period Selector -->
+                <div class="period-selector">
+                    <h3>Select Time Period</h3>
+                    <div class="period-buttons">
+                        <button class="period-btn active" data-period="7">Last 7 Days</button>
+                        <button class="period-btn" data-period="30">Last 30 Days</button>
+                        <button class="period-btn" data-period="90">Last 3 Months</button>
+                        <button class="period-btn" data-period="365">Last Year</button>
+                    </div>
+                </div>
+
+                <!-- Historical Stats -->
+                <div class="historical-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Energy Used</h3>
+                            <p class="stat-value" id="periodEnergy">0 kWh</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Cost</h3>
+                            <p class="stat-value" id="periodCost">₹0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-trending-up"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Daily Average</h3>
+                            <p class="stat-value" id="dailyAverage">0 kWh</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Usage Days</h3>
+                            <p class="stat-value" id="usageDays">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Usage Chart -->
+                <div class="chart-container">
+                    <h3>Energy Usage Over Time</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="usageChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="chart-controls">
+                        <button class="chart-btn" onclick="toggleChartType()">
+                            <i class="fas fa-chart-bar"></i> Toggle Chart Type
+                        </button>
+                        <button class="chart-btn" onclick="exportChartData()">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Peak Hours Analysis -->
+                <div class="peak-hours-container">
+                    <h3>Peak Usage Hours</h3>
+                    <div class="peak-hours-chart">
+                        <canvas id="peakHoursChart"></canvas>
+                    </div>
+                    <div class="peak-insights">
+                        <div class="peak-insight">
+                            <i class="fas fa-clock"></i>
+                            <span>Peak: <strong id="peakHour">--</strong></span>
+                        </div>
+                        <div class="peak-insight">
+                            <i class="fas fa-leaf"></i>
+                            <span>Off-Peak: <strong id="offPeakHour">--</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Appliances -->
+                <div class="top-appliances">
+                    <h3>Top Energy Consumers</h3>
+                    <div class="appliances-list" id="topAppliancesList">
+                        <!-- Top appliances will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Usage Timeline -->
+                <div class="usage-timeline">
+                    <h3>Recent Usage Timeline</h3>
+                    <div class="timeline-container" id="usageTimeline">
+                        <!-- Timeline items will be populated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Appliance Tracking -->
+            <section class="appliance-tracking">
+                <h2><i class="fas fa-plug"></i> Appliance Tracking</h2>
+                
+                <!-- Manual Tracking Form -->
+                <div class="tracking-section">
+                    <h3>Manual Tracking</h3>
+                    <form id="manualTrackingForm" class="tracking-form">
+                        <div class="form-group">
+                            <label for="applianceSelect">Select Appliance:</label>
+                            <select id="applianceSelect" required onchange="updatePowerRating()">
+                                <option value="">Choose an appliance...</option>
+                                <option value="AC (1.5 Ton)|1800">AC (1.5 Ton) - 1800W</option>
+                                <option value="AC (1 Ton)|1200">AC (1 Ton) - 1200W</option>
+                                <option value="Geyser|2000">Geyser - 2000W</option>
+                                <option value="Ceiling Fan|75">Ceiling Fan - 75W</option>
+                                <option value="Table Fan|50">Table Fan - 50W</option>
+                                <option value="LED TV (32 inch)|50">LED TV (32 inch) - 50W</option>
+                                <option value="LED TV (55 inch)|100">LED TV (55 inch) - 100W</option>
+                                <option value="Laptop|65">Laptop - 65W</option>
+                                <option value="Desktop Computer|200">Desktop Computer - 200W</option>
+                                <option value="Refrigerator|150">Refrigerator - 150W</option>
+                                <option value="Mixer Grinder|500">Mixer Grinder - 500W</option>
+                                <option value="Microwave|1000">Microwave - 1000W</option>
+                                <option value="Electric Iron|1000">Electric Iron - 1000W</option>
+                                <option value="Washing Machine|500">Washing Machine - 500W</option>
+                                <option value="LED Bulb|9">LED Bulb - 9W</option>
+                                <option value="CFL Bulb|15">CFL Bulb - 15W</option>
+                                <option value="Incandescent Bulb|60">Incandescent Bulb - 60W</option>
+                                <option value="Electric Kettle|1500">Electric Kettle - 1500W</option>
+                                <option value="Toaster|800">Toaster - 800W</option>
+                                <option value="Electric Heater|2000">Electric Heater - 2000W</option>
+                                <option value="Others|0">Others (Custom)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="customApplianceGroup" style="display: none;">
+                            <label for="applianceName">Custom Appliance Name:</label>
+                            <input type="text" id="applianceName" placeholder="e.g., Gaming Console, Hair Dryer">
+                        </div>
+                        <div class="form-group">
+                            <label for="powerRating">Power Rating (Watts):</label>
+                            <input type="number" id="powerRating" required placeholder="e.g., 1000 (1kW)" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="usageDate">Usage Date:</label>
+                            <input type="date" id="usageDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="startTime">Start Time:</label>
+                            <input type="time" id="startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="durationHours">Duration:</label>
+                            <div class="duration-inputs">
+                                <div class="duration-field">
+                                    <input type="number" id="durationHours" min="0" max="24" value="1" required>
+                                    <label for="durationHours">Hours</label>
+                                </div>
+                                <div class="duration-field">
+                                    <input type="number" id="durationMinutes" min="0" max="59" value="0" required>
+                                    <label for="durationMinutes">Minutes</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Usage
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="startAppliance()">
+                            <i class="fas fa-play"></i> Start Appliance
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Smart Plug Integration -->
+                <div class="tracking-section">
+                    <h3>Smart Plug Integration</h3>
+                    <div class="smart-plug-info">
+                        <div class="smart-plug-status">
+                            <i class="fas fa-wifi"></i>
+                            <span>Smart Plug Connected</span>
+                            <div class="status-indicator active"></div>
+                        </div>
+                        <p>Your smart plugs are automatically tracking energy usage for connected appliances.</p>
+                        <div class="smart-plug-appliances">
+                            <h4>Connected Appliances:</h4>
+                            <ul id="smartPlugAppliances">
+                                <li><i class="fas fa-snowflake"></i> AC (1.5 Ton)</li>
+                                <li><i class="fas fa-fire"></i> Geyser</li>
+                                <li><i class="fas fa-fan"></i> Ceiling Fan</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appliance Intelligence -->
+                <div class="tracking-section">
+                    <h3><i class="fas fa-brain"></i> Appliance Intelligence</h3>
+                    <div class="intelligence-grid">
+                        <div class="intelligence-card">
+                            <h4>Efficiency Score</h4>
+                            <div class="efficiency-meter">
+                                <div class="meter-circle">
+                                    <span id="efficiencyScore">85</span>%
+                                </div>
+                            </div>
+                            <p>Your appliances are running efficiently</p>
+                        </div>
+                        <div class="intelligence-card">
+                            <h4>Smart Scheduling</h4>
+                            <div class="schedule-suggestions" id="scheduleSuggestions">
+                                <div class="schedule-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Run AC during off-peak hours (10 PM - 6 AM)</span>
+                                </div>
+                                <div class="schedule-item">
+                                    <i class="fas fa-leaf"></i>
+                                    <span>Use geyser only when needed</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="intelligence-card">
+                            <h4>Cost Optimization</h4>
+                            <div class="cost-tips" id="costTips">
+                                <div class="tip-item">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <span>Switch to LED bulbs to save ₹200/month</span>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="fas fa-thermometer-half"></i>
+                                    <span>Set AC to 24°C for optimal efficiency</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Current Usage -->
+            <section class="current-usage">
+                <h2><i class="fas fa-clock"></i> Current Usage</h2>
+                <div class="usage-list" id="currentUsageList">
+                    <!-- Usage items will be populated here -->
+                </div>
+                <div class="shutdown-alerts" id="shutdownAlerts">
+                    <!-- Shutdown alerts will be populated here -->
+                </div>
+            </section>
+
+            <!-- Enhanced Alerts Section -->
+            <section class="alerts-section">
+                <h2><i class="fas fa-bell"></i> Alerts & Notifications</h2>
+                <div class="alerts-header">
+                    <div class="alerts-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="danger">Critical</button>
+                        <button class="filter-btn" data-filter="warning">Warnings</button>
+                        <button class="filter-btn" data-filter="info">Info</button>
+                    </div>
+                    <div class="alerts-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="markAllRead()">
+                            <i class="fas fa-check-double"></i> Mark All Read
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="clearOldAlerts()">
+                            <i class="fas fa-trash"></i> Clear Old
+                        </button>
+                    </div>
+                </div>
+                <div class="alerts-container" id="alertsContainer">
+                    <!-- Alerts will be populated here -->
+                </div>
+            </section>
+
+            <!-- Energy Suggestions -->
+            <section class="suggestions-section">
+                <h2><i class="fas fa-lightbulb"></i> Smart Suggestions</h2>
+                <div class="suggestions-container" id="suggestionsContainer">
+                    <!-- Suggestions will be populated here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notificationToast" class="notification-toast">
+        <div class="toast-content">
+            <i class="fas fa-info-circle"></i>
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <!-- Enhanced Notification Center -->
+    <div id="notificationCenter" class="notification-center">
+        <div class="notification-header">
+            <h3><i class="fas fa-bell"></i> Notifications</h3>
+            <button class="close-notifications" onclick="toggleNotificationCenter()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <!-- Notifications will be populated here -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

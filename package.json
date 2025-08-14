@@ -1,0 +1,28 @@
+{
+  "name": "ecogo-energy-monitor",
+  "version": "1.0.0",
+  "description": "EcoGo Energy Monitoring Application - Track and optimize your home energy usage",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve . -p 3000",
+    "build": "echo 'Static site - no build required'",
+    "start": "npx serve . -p 3000",
+    "vercel-build": "echo 'Static site ready for deployment'"
+  },
+  "keywords": [
+    "energy",
+    "monitoring",
+    "dashboard",
+    "sustainability",
+    "smart-home",
+    "electricity"
+  ],
+  "author": "EcoGo Team",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
