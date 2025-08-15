@@ -8,9 +8,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="cloud-service.js"></script>
 </head>
 <body>
-    <div class="container">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <i class="fas fa-leaf fa-spin"></i>
+            <h2>EcoGo</h2>
+            <p>Loading your energy dashboard...</p>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer" style="display: none;">
         <!-- Header -->
         <header class="header">
             <div class="header-content">
@@ -387,6 +402,8 @@
         <div class="notification-list" id="notificationList">
             <!-- Notifications will be populated here -->
         </div>
+    </div>
+
     </div>
 
     <script src="script.js"></script>

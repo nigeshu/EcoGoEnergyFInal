@@ -1,12 +1,9 @@
-// EcoGo Authentication System
+// EcoGo Authentication System - Firebase Integration
 class AuthSystem {
     constructor() {
-        this.users = this.loadUsers();
-        this.currentUser = this.getCurrentUser();
-        console.log('AuthSystem initialized:', {
-            usersCount: this.users.length,
-            currentUser: this.currentUser ? this.currentUser.name : 'None'
-        });
+        this.cloudService = window.cloudService;
+        this.currentUser = null;
+        console.log('AuthSystem initialized with Firebase');
         this.init();
     }
 
@@ -18,17 +15,21 @@ class AuthSystem {
     setupEventListeners() {
         // Login form
         const loginForm = document.getElementById('loginForm');
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleLogin();
-        });
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleLogin();
+            });
+        }
 
         // Signup form
         const signupForm = document.getElementById('signupForm');
-        signupForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleSignup();
-        });
+        if (signupForm) {
+            signupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleSignup();
+            });
+        }
 
         // Password toggle buttons
         this.setupPasswordToggles();
@@ -77,13 +78,14 @@ class AuthSystem {
     }
 
     checkAuthStatus() {
-        if (this.currentUser) {
+        // Check if user is already authenticated
+        if (this.cloudService && this.cloudService.isAuthenticated()) {
             // User is already logged in, redirect to main page
             window.location.href = 'index.html';
         }
     }
 
-    handleLogin() {
+    async handleLogin() {
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const rememberMe = document.getElementById('rememberMe').checked;
@@ -104,25 +106,25 @@ class AuthSystem {
             return;
         }
 
-        // Check if users exist
-        console.log('Available users:', this.users.map(u => ({ email: u.email, name: u.name })));
+        // Show loading state
+        this.showNotification('Signing in...', 'info');
 
-        // Attempt login
-        const user = this.authenticateUser(email, password);
-        if (user) {
-            console.log('Login successful for user:', user.name);
-            this.loginUser(user, rememberMe);
+        // Attempt login with Firebase
+        const result = await this.cloudService.signIn(email, password);
+        
+        if (result.success) {
+            console.log('Login successful for user:', result.user.email);
             this.showNotification('Login successful! Redirecting...', 'success');
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 1500);
         } else {
-            console.log('Login failed - invalid credentials');
-            this.showNotification('Invalid email or password', 'error');
+            console.log('Login failed:', result.error);
+            this.showNotification(result.error, 'error');
         }
     }
 
-    handleSignup() {
+    async handleSignup() {
         const name = document.getElementById('signupName').value.trim();
         const email = document.getElementById('signupEmail').value.trim();
         const password = document.getElementById('signupPassword').value;
@@ -160,20 +162,22 @@ class AuthSystem {
             return;
         }
 
-        // Check if user already exists
-        if (this.userExists(email)) {
-            this.showError('signupEmail', 'An account with this email already exists');
-            return;
-        }
+        // Show loading state
+        this.showNotification('Creating account...', 'info');
 
-        // Create new user
-        const newUser = this.createUser(name, email, password);
-        console.log('User created successfully:', newUser.name);
-        this.loginUser(newUser, false);
-        this.showNotification('Account created successfully! Redirecting...', 'success');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500);
+        // Create new user with Firebase
+        const result = await this.cloudService.signUp(email, password, name);
+        
+        if (result.success) {
+            console.log('User created successfully:', result.user.email);
+            this.showNotification('Account created successfully! Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        } else {
+            console.log('Signup failed:', result.error);
+            this.showNotification(result.error, 'error');
+        }
     }
 
     validateEmail(email) {
@@ -181,77 +185,11 @@ class AuthSystem {
         return emailRegex.test(email);
     }
 
-    userExists(email) {
-        return this.users.some(user => user.email.toLowerCase() === email.toLowerCase());
-    }
-
-    authenticateUser(email, password) {
-        const user = this.users.find(user => 
-            user.email.toLowerCase() === email.toLowerCase() && 
-            user.password === password
-        );
-        return user;
-    }
-
-    createUser(name, email, password) {
-        const newUser = {
-            id: Date.now().toString(),
-            name: name,
-            email: email.toLowerCase(),
-            password: password,
-            createdAt: new Date().toISOString(),
-            // Initialize user data with zero values
-            userData: {
-                appliances: [],
-                alerts: [],
-                suggestions: [],
-                currentUsage: [],
-                electricityRate: 6.5, // ₹6.5 per kWh (Indian standard)
-                totalEnergyUsed: 0,
-                totalCost: 0,
-                joinDate: new Date().toISOString()
-            }
-        };
-
-        this.users.push(newUser);
-        this.saveUsers();
-        return newUser;
-    }
-
-    loginUser(user, rememberMe) {
-        this.currentUser = user;
-        
-        if (rememberMe) {
-            localStorage.setItem('ecogo_user', JSON.stringify(user));
-        } else {
-            sessionStorage.setItem('ecogo_user', JSON.stringify(user));
-        }
-
-        // Save current user ID for the main app
-        localStorage.setItem('ecogo_current_user_id', user.id);
-    }
-
-    getCurrentUser() {
-        const user = localStorage.getItem('ecogo_user') || sessionStorage.getItem('ecogo_user');
-        return user ? JSON.parse(user) : null;
-    }
-
-    loadUsers() {
-        const users = localStorage.getItem('ecogo_users');
-        const parsedUsers = users ? JSON.parse(users) : [];
-        console.log('Loaded users from localStorage:', parsedUsers.length);
-        return parsedUsers;
-    }
-
-    saveUsers() {
-        localStorage.setItem('ecogo_users', JSON.stringify(this.users));
-        console.log('Users saved to localStorage:', this.users.length);
-    }
-
     showError(fieldId, message) {
         const field = document.getElementById(fieldId);
-        const wrapper = field.parentElement;
+        if (!field) return;
         
+        const wrapper = field.parentElement;
         wrapper.classList.add('error');
         
         // Remove existing error message
@@ -282,6 +220,8 @@ class AuthSystem {
     showNotification(message, type = 'info') {
         const toast = document.getElementById('notificationToast');
         const toastMessage = document.getElementById('toastMessage');
+        
+        if (!toast || !toastMessage) return;
         
         toastMessage.textContent = message;
         toast.className = `notification-toast ${type}`;
@@ -331,5 +271,12 @@ function toggleConfirmPassword() {
 
 // Initialize authentication system
 document.addEventListener('DOMContentLoaded', () => {
-    window.authSystem = new AuthSystem();
+    // Wait for Firebase to initialize
+    setTimeout(() => {
+        if (window.cloudService) {
+            window.authSystem = new AuthSystem();
+        } else {
+            console.error('Cloud service not available');
+        }
+    }, 1000);
 });
